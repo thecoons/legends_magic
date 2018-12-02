@@ -14,6 +14,10 @@ class Action:
         cls.action_buffer += 'PASS;'
 
     @classmethod
+    def pick_card(cls, id_target):
+        cls.action_buffer += 'PICK {}'.format(id_target)
+
+    @classmethod
     def summon(cls, target_id):
         cls.action_buffer += 'SUMMON {};'.format(target_id)
 
@@ -30,18 +34,113 @@ class Action:
         cls.action_buffer = ''
 
 
+class Player:
+    def __init__(self, health, mana, deck, rune, draw):
+        self.health = health
+        self.mana = mana
+        self.deck = deck
+        self.rune = rune
+        self.draw = draw
+
+    def __repr__(self):
+        return '{} {} {} {} {}'.format(
+            self.health,
+            self.mana,
+            self.deck,
+            self.rune,
+            self.draw,
+        )
+
+
+class AllyPlayer(Player):
+    pass
+
+
+class EnnemyPlayer(Player):
+    def __init__(self, hand_size, action_size, actions, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.hand_size = hand_size
+        self.action_size = action_size
+        self.actions = actions
+
+
+class Card:
+    def __init__(
+        self,
+        card_number,
+        instance_id,
+        location,
+        card_type,
+        cost,
+        attack,
+        defense,
+        abilities,
+        my_health_change,
+        opponent_health_change,
+        card_draw
+    ):
+        self.card_number = card_number
+        self.instance_id = instance_id
+        self.location = location
+        self.card_type = card_type
+        self.cost = cost
+        self.attack = attack
+        self.defense = defense
+        self.abilities = abilities
+        self.my_health_change = my_health_change
+        self.opponent_health_change = opponent_health_change
+        self.card_draw = card_draw
+
+    def __repr__(self):
+        return '{} {} {} {}'.format(
+            self.card_number,
+            self.instance_id,
+            self.location,
+            self.card_type
+        )
+
+
+class HiddenCard(Card):
+    pass
+
+
+class VisibleCard(Card):
+    pass
+
+
+class Board:
+    def __init__(self, size, cards):
+        self.size = size
+        self.cards = cards
+
+
 class Game:
-    def init_turn():
-        for i in range(2):
-            player_health, player_mana, player_deck, player_rune, player_draw = [
-                int(j) for j in input().split()
-            ]
-        opponent_hand, opponent_actions = [int(i) for i in input().split()]
-        for i in range(opponent_actions):
-            # card_number_and_action = input()
-            _ = input()
-        card_count = int(input())
-        for i in range(card_count):
+    def __init__(self):
+        self.ally_player = None
+        self.ennemy_player = None
+        self.board = None
+
+    def _get_next_data_row(self):
+        return [int(j) for j in input().split()]
+
+    def _init_ally(self):
+        args_ally_player = self._get_next_data_row()
+        self.ally_player = AllyPlayer(*args_ally_player)
+
+    def _init_ennemy(self):
+        args_ennemy_player = self._get_next_data_row()
+        args_ennemy_extra = self._get_next_data_row()
+        ennemy_actions = []
+        for i in range(args_ennemy_extra[-1]):
+            ennemy_actions.append(input())
+        args_ennemy_extra.append(ennemy_actions)
+        args_ennemy_player = args_ennemy_extra + args_ennemy_player
+        self.ennemy_player = EnnemyPlayer(*args_ennemy_player)
+
+    def _init_board(self):
+        args_board = [int(input())]
+        board_cards = []
+        for i in range(args_board[0]):
             card_number, instance_id, location, card_type, cost, attack, defense, abilities, my_health_change, opponent_health_change, card_draw = input().split()
             card_number = int(card_number)
             instance_id = int(instance_id)
@@ -53,39 +152,37 @@ class Game:
             my_health_change = int(my_health_change)
             opponent_health_change = int(opponent_health_change)
             card_draw = int(card_draw)
-            print("PASS")
+            board_cards.append(
+                Card(
+                    card_number,
+                    instance_id,
+                    location,
+                    card_type,
+                    cost,
+                    attack,
+                    defense,
+                    abilities,
+                    my_health_change,
+                    opponent_health_change,
+                    card_draw
+                )
+            )
+        args_board.append(board_cards)
+        self.board = Board(*args_board)
+
+    def init_turn(self):
+        self._init_ally()
+        self._init_ennemy()
+        self._init_board()
 
     def run(self):
         while True:
             self.init_turn()
-
-    # Write an action using print
-    # To debug: print("Debug messages...", file=sys.stderr)
-
-
-# game loop
-
-
-#########
-# TESTS #
-#########
-class TestActionMethods(unittest.TestCase):
-
-    @patch('sys.stdout', new_callable=StringIO)
-    def test_action_are_chained(self, mock_stdout):
-        Action.summon(1)
-        Action.attack(1, 2)
-        Action.pass_turn()
-        Action.flush()
-        self.assertEqual('SUMMON 1;ATTACK 1 2;PASS\n', mock_stdout.getvalue())
-
-    @patch('sys.stdout', new_callable=StringIO)
-    def test_action_buffer_is_flush(self, mock_stdout):
-        Action.pass_turn()
-        Action.flush()
-        Action.pass_turn()
-        self.assertEqual('PASS\n', mock_stdout.getvalue())
+            sys.stderr.write(str(game.board.__dict__))
+            Action.pass_turn()
+            Action.flush()
 
 
 if __name__ == '__main__':
-    unittest.main()
+    game = Game()
+    game.run()
