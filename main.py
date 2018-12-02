@@ -120,6 +120,9 @@ class Game:
         self.ennemy_player = None
         self.board = None
 
+    def is_draft_turn(self):
+        return self.ally_player.mana < 1
+
     def _get_next_data_row(self):
         return [int(j) for j in input().split()]
 
@@ -175,6 +178,9 @@ class Game:
         self._init_ennemy()
         self._init_board()
 
+    def action(self):
+        pass
+
     def pick_up_draft(self):
         best_score = -1
         choosen_card = -1
@@ -186,10 +192,16 @@ class Game:
 
         Action.pick_card(choosen_card)
 
+    def play_turn(self):
+        self.init_turn()
+        if self.is_draft_turn():
+            self.pick_up_draft()
+        else:
+            self.action()
+
     def run(self):
         while True:
-            self.init_turn()
-            self.pick_up_draft()
+            self.play_turn()
             sys.stderr.write(str(game.board.__dict__))
             Action.flush()
 

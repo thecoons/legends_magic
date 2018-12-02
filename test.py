@@ -1,7 +1,8 @@
 import unittest
+import sys
 
 from io import StringIO
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 
 from main import (
     Action,
@@ -184,6 +185,47 @@ class TestGameMethods(unittest.TestCase):
         Action.flush()
 
         self.assertEqual('PICK 1\n', stdout_mock.getvalue())
+
+    @patch('builtins.input')
+    @patch('sys.stdout', new_callable=StringIO)
+    def test_end_draft(self, stdout_mock, input_mock):
+        input_mock.side_effect = [
+            # Draft tour
+            # Player data
+            '30 0 0 25 0',
+            '30 0 0 25 0',
+            # Ennemy hand size and actions size
+            '0 0',
+            # Board size
+            '3',
+            # Cards data
+            '18 -1 0 0 99 0 0 ------ 0 0 0',
+            '9 -1 0 0 1 99 99 ------ 0 0 0',
+            '7 -1 0 0 99 0 0 ------ 0 0 0',
+            # Standard tour
+            # Player data
+            '30 1 0 25 0',
+            '30 1 0 25 0',
+            # Ennemy hand size and actions size
+            '0 0',
+            # Board size
+            '3',
+            # Cards data
+            '18 -1 0 0 99 0 0 ------ 0 0 0',
+            '9 -1 0 0 1 99 99 ------ 0 0 0',
+            '7 -1 0 0 99 0 0 ------ 0 0 0',
+        ]
+
+        game = Game()
+        with patch.object(game, 'pick_up_draft') as pick_up_draft_mock:
+            game.play_turn()
+            self.assertEqual(0, game.ally_player.mana)
+            # pick_up_draft_mock.assert_called_once()
+            game.play_turn()
+            self.assertEqual(1, game.ally_player.mana)
+            self.assertFalse(game.is_draft_turn())
+            pick_up_draft_mock.assert_called_once()
+
 
 if __name__ == '__main__':
     unittest.main()
