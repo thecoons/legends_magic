@@ -156,12 +156,34 @@ class TestGameMethods(unittest.TestCase):
             actions=[]
         )
 
-
         self.assertDictEqual(
             expected_ennemy_player.__dict__,
             game.ennemy_player.__dict__
         )
 
+    @patch('builtins.input')
+    @patch('sys.stdout', new_callable=StringIO)
+    def test_pick_up_draft(self, stdout_mock, input_mock):
+        input_mock.side_effect = [
+            # Player data
+            '30 0 0 25 0',
+            '30 0 0 25 0',
+            # Ennemy hand size and actions size
+            '0 0',
+            # Board size
+            '3',
+            # Cards data
+            '18 -1 0 0 99 0 0 ------ 0 0 0',
+            '9 -1 0 0 1 99 99 ------ 0 0 0',
+            '7 -1 0 0 99 0 0 ------ 0 0 0',
+        ]
+
+        game = Game()
+        game.init_turn()
+        game.pick_up_draft()
+        Action.flush()
+
+        self.assertEqual('PICK 1\n', stdout_mock.getvalue())
 
 if __name__ == '__main__':
     unittest.main()

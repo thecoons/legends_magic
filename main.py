@@ -15,7 +15,7 @@ class Action:
 
     @classmethod
     def pick_card(cls, id_target):
-        cls.action_buffer += 'PICK {}'.format(id_target)
+        cls.action_buffer += 'PICK {};'.format(id_target)
 
     @classmethod
     def summon(cls, target_id):
@@ -175,11 +175,22 @@ class Game:
         self._init_ennemy()
         self._init_board()
 
+    def pick_up_draft(self):
+        best_score = -1
+        choosen_card = -1
+        for index, card in enumerate(self.board.cards):
+            card_score = (card.attack + card.defense)/card.cost
+            if card_score > best_score:
+                best_score = card_score
+                choosen_card = index
+
+        Action.pick_card(choosen_card)
+
     def run(self):
         while True:
             self.init_turn()
+            self.pick_up_draft()
             sys.stderr.write(str(game.board.__dict__))
-            Action.pass_turn()
             Action.flush()
 
 
