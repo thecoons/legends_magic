@@ -40,6 +40,23 @@ class TestActionMethods(unittest.TestCase):
         self.assertEqual('PASS\n', mock_stdout.getvalue())
 
 
+class TestAllyPlayerMethods(unittest.TestCase):
+    def test_cards_playable(self):
+        board_cards = [
+            Card(*[1, 11, 1, 0, 4, 7, 4, '------', 0, 0, 0]),
+            Card(*[2, 22, 0, 0, 5, 7, 4, '------', 0, 0, 0]),
+            Card(*[3, 33, 0, 0, 4, 7, 4, '------', 0, 0, 0]),
+        ]
+
+        board = Board(len(board_cards), board_cards)
+        ally_player = AllyPlayer(30, 4, 0, 0, 0)
+
+        self.assertEqual(
+            ally_player.cards_playable(board),
+            board_cards[2:]
+        )
+
+
 class TestGameMethods(unittest.TestCase):
     @patch('builtins.input')
     def test_init_turn(self, input_mock):
@@ -88,7 +105,7 @@ class TestGameMethods(unittest.TestCase):
         )
 
         expected_board = Board(
-            size=2,
+            number_of_cards=2,
             cards=[
                 expected_card_1,
                 expected_card_2
@@ -118,7 +135,10 @@ class TestGameMethods(unittest.TestCase):
             game.ennemy_player.__dict__
         )
 
-        self.assertEqual(expected_board.size, game.board.size)
+        self.assertEqual(
+            expected_board.number_of_cards,
+            game.board.number_of_cards
+        )
         self.assertEqual(
             expected_card_1.__dict__,
             game.board.cards[0].__dict__

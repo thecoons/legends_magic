@@ -5,6 +5,11 @@ import unittest
 from io import StringIO
 from unittest.mock import patch
 
+CARD_LOCATION = {
+    'ally_hand': 0,
+    'ally_side': 1,
+    'ennemy_side': -1
+}
 
 class Action:
     action_buffer = ''
@@ -43,7 +48,7 @@ class Player:
         self.draw = draw
 
     def __repr__(self):
-        return '{} {} {} {} {}'.format(
+        return '{} {} {} {} {} {}'.format(
             self.health,
             self.mana,
             self.deck,
@@ -53,7 +58,13 @@ class Player:
 
 
 class AllyPlayer(Player):
-    pass
+    def cards_playable(self, board):
+        return [
+            card
+            for card in board.cards
+            if card.cost <= self.mana
+            and card.location == CARD_LOCATION['ally_hand']
+        ]
 
 
 class EnnemyPlayer(Player):
@@ -92,11 +103,12 @@ class Card:
         self.card_draw = card_draw
 
     def __repr__(self):
-        return '{} {} {} {}'.format(
+        return '{} {} {} {} {}'.format(
             self.card_number,
             self.instance_id,
             self.location,
-            self.card_type
+            self.card_type,
+            self.cost,
         )
 
 
@@ -109,8 +121,8 @@ class VisibleCard(Card):
 
 
 class Board:
-    def __init__(self, size, cards):
-        self.size = size
+    def __init__(self, number_of_cards, cards):
+        self.number_of_cards = number_of_cards
         self.cards = cards
 
 
