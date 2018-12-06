@@ -5,6 +5,11 @@ import unittest
 from io import StringIO
 from unittest.mock import patch
 
+CARD_LOCATION = {
+    'ally_hand': 0,
+    'ally_side': 1,
+    'ennemy_side': -1
+}
 
 class Action:
     action_buffer = ''
@@ -15,7 +20,7 @@ class Action:
 
     @classmethod
     def pick_card(cls, id_target):
-        cls.action_buffer += 'PICK {}'.format(id_target)
+        cls.action_buffer += 'PICK {};'.format(id_target)
 
     @classmethod
     def summon(cls, target_id):
@@ -43,7 +48,7 @@ class Player:
         self.draw = draw
 
     def __repr__(self):
-        return '{} {} {} {} {}'.format(
+        return '{} {} {} {} {} {}'.format(
             self.health,
             self.mana,
             self.deck,
@@ -53,7 +58,13 @@ class Player:
 
 
 class AllyPlayer(Player):
-    pass
+    def cards_playable(self, board):
+        return [
+            card
+            for card in board.cards
+            if card.cost <= self.mana
+            and card.location == CARD_LOCATION['ally_hand']
+        ]
 
 
 class EnnemyPlayer(Player):
@@ -92,11 +103,12 @@ class Card:
         self.card_draw = card_draw
 
     def __repr__(self):
-        return '{} {} {} {}'.format(
+        return '{} {} {} {} {}'.format(
             self.card_number,
             self.instance_id,
             self.location,
-            self.card_type
+            self.card_type,
+            self.cost,
         )
 
 
@@ -109,8 +121,8 @@ class VisibleCard(Card):
 
 
 class Board:
-    def __init__(self, size, cards):
-        self.size = size
+    def __init__(self, number_of_cards, cards):
+        self.number_of_cards = number_of_cards
         self.cards = cards
 
 
@@ -119,6 +131,9 @@ class Game:
         self.ally_player = None
         self.ennemy_player = None
         self.board = None
+
+    def is_draft_turn(self):
+        return self.ally_player.mana < 1
 
     def _get_next_data_row(self):
         return [int(j) for j in input().split()]
@@ -175,11 +190,31 @@ class Game:
         self._init_ennemy()
         self._init_board()
 
+    def action(self):
+        pass
+
+    def pick_up_draft(self):
+        best_score = -1
+        choosen_card = -1
+        for index, card in enumerate(self.board.cards):
+            card_score = (card.attack + card.defense)/card.cost
+            if card_score > best_score:
+                best_score = card_score
+                choosen_card = index
+
+        Action.pick_card(choosen_card)
+
+    def play_turn(self):
+        self.init_turn()
+        if self.is_draft_turn():
+            self.pick_up_draft()
+        else:
+            self.action()
+
     def run(self):
         while True:
-            self.init_turn()
+            self.play_turn()
             sys.stderr.write(str(game.board.__dict__))
-            Action.pass_turn()
             Action.flush()
 
 
